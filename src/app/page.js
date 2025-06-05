@@ -2,7 +2,7 @@
 import { use, useEffect, useState } from 'react';
 import io from 'socket.io-client';
 
-const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL);
+const socket = io('https://backend-glist-production.up.railway.app');
 
 export default function Home() {
   const [items, setItems] = useState([]);
@@ -10,7 +10,7 @@ export default function Home() {
   const [newItemQuantity, setNewItemQuantity] = useState(1);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/groceries`)
+    fetch('https://backend-glist-production.up.railway.app/api/groceries')
       .then(res => res.json())
       .then(setItems)
       .catch(console.error);
@@ -42,7 +42,7 @@ export default function Home() {
 
   const toggleItem = async (item) => {
     const updated = { ...item, inCart: !item.inCart };
-    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/groceries/${item._id}`, {
+    await fetch(`https://backend-glist-production.up.railway.app/api/groceries/${item._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updated),
@@ -52,7 +52,7 @@ export default function Home() {
   const addItem = async () => {
     if (!newItemName.trim()) return;
 
-    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/groceries`, {
+    await fetch(`https://backend-glist-production.up.railway.app/api/groceries`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newItemName, quantity: newItemQuantity })
@@ -63,7 +63,7 @@ export default function Home() {
   };
 
   const deleteItem = async (item) => {
-    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/groceries/${item._id}`, {
+    await fetch(`https://backend-glist-production.up.railway.app/api/groceries/${item._id}`, {
       method: 'DELETE',
     });
   };
