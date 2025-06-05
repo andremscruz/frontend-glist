@@ -1,95 +1,108 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import { use, useEffect, useState } from 'react';
+import io from 'socket.io-client';
+
+const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL);
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.js</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [items, setItems] = useState([]);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemQuantity, setNewItemQuantity] = useState(1);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/groceries`)
+      .then(res => res.json())
+      .then(setItems)
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    const handleUpdate = (updatedItem) => {
+      setItems(prev => prev.map(item => item._id === updatedItem._id ? updatedItem : item));
+    };
+
+    const handleAdd = (addedItem) => {
+      setItems(prev => [...prev, addedItem]);
+    };
+
+    const handleDelete = (deletedItem) => {
+      setItems(prev => prev.filter(item => item._id !== deletedItem._id));
+    };
+
+    socket.on('item-updated', handleUpdate);
+    socket.on('item-added', handleAdd);
+    socket.on('item-deleted', handleDelete);
+
+    return () => {
+      socket.off('item-updated', handleUpdate);
+      socket.off('item-added', handleAdd);
+      socket.off('item-deleted', handleDelete);
+    };
+  }, []);
+
+  const toggleItem = async (item) => {
+    const updated = { ...item, inCart: !item.inCart };
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/groceries/${item._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated),
+    });
+  };
+
+  const addItem = async () => {
+    if (!newItemName.trim()) return;
+
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/groceries`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newItemName, quantity: newItemQuantity })
+    });
+
+    setNewItemName('');
+    setNewItemQuantity(1);
+  };
+
+  const deleteItem = async (item) => {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/groceries/${item._id}`, {
+      method: 'DELETE',
+    });
+  };
+
+  return (
+    <div>
+      <h1>Lista de Compras 🛒</h1>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+        <input
+          type="text"
+          placeholder="Novo item"
+          value={newItemName}
+          onChange={(e) => setNewItemName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && addItem()}
+        />
+        <input
+          type="number"
+          placeholder="Qtd"
+          value={newItemQuantity}
+          min={1}
+          onChange={(e) => setNewItemQuantity(Number(e.target.value))}
+          onKeyDown={(e) => e.key === 'Enter' && addItem()}
+          style={{ width: '60px' }}
+        />
+        <button onClick={addItem}>Adicionar</button>
+      </div>
+      <ul>
+        {items.map(item => (
+          <li
+            key={item._id}
+            style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <span onClick={() => toggleItem(item)}>
+              {item.name} (x{item.quantity}) {item.inCart ? '✅' : '🛒'}
+            </span>
+            <button onClick={() => deleteItem(item)} style={{ marginLeft: 10 }}>🗑️</button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
