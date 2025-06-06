@@ -96,8 +96,14 @@ export default function Home() {
             key={item._id}
             style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <span onClick={() => toggleItem(item)}>
-              {item.name} (x{item.quantity}) {item.inCart ? '✅' : '🛒'}
+            <span>
+              {item.name} 
+    
+              <input 
+                type='checkbox' 
+                checked={item.inCart} 
+                onChange={() => toggleItem(item)}>
+              </input> 
             </span>
             <button onClick={() => deleteItem(item)} style={{ marginLeft: 10 }}>🗑️</button>
           </li>
