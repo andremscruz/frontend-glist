@@ -98,11 +98,12 @@ export default function Home() {
           >
             <span>
               {item.name} 
-    
+
               <input 
                 type='checkbox' 
                 checked={item.inCart} 
-                onChange={() => toggleItem(item)}>
+                onChange={() => toggleItem(item)}
+                style={{ marginLeft: 10 }}>
               </input> 
             </span>
             <button onClick={() => deleteItem(item)} style={{ marginLeft: 10 }}>🗑️</button>
