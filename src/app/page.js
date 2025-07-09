@@ -103,7 +103,7 @@ export default function Home() {
                 type='checkbox' 
                 checked={item.inCart} 
                 onChange={() => toggleItem(item)}
-                style={{ marginLeft: 10 }}>
+                style={{ marginLeft: 20 }}>
               </input> 
             </span>
             <button onClick={() => deleteItem(item)} style={{ marginLeft: 10 }}>🗑️</button>
