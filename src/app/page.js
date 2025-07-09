@@ -97,7 +97,7 @@ export default function Home() {
             style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
             <span>
-              {item.name} 
+              {item.name}{item.quantity}
 
               <input 
                 type='checkbox' 
